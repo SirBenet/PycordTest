@@ -732,8 +732,6 @@ class MessageCommand(ContextMenuCommand):
     def copy(self):
         """Creates a copy of this command.
 
-<<<<<<< HEAD
-=======
         Returns
         --------
         :class:`MessageCommand`
@@ -828,7 +826,6 @@ def command(self, **kwargs):
     """
     return application_command(**kwargs)
         
->>>>>>> 75491343cbb16a5296cde1c3a7d215a0a532ff41
 # Validation
 def validate_chat_input_name(name: Any):
     if not isinstance(name, str):
