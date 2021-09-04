@@ -407,6 +407,43 @@ class SlashCommand(ApplicationCommand):
             if o.name not in kwargs:
                 kwargs[o.name] = o.default
         await self.callback(ctx, **kwargs)
+    
+    def copy(self):
+        """Creates a copy of this command.
+
+        Returns
+        --------
+        :class:`SlashCommand`
+            A new instance of this command.
+        """
+        ret = self.__class__(self.callback, **self.__original_kwargs__)
+        return self._ensure_assignment_on_copy(ret)
+
+    def _ensure_assignment_on_copy(self, other):
+        other._before_invoke = self._before_invoke
+        other._after_invoke = self._after_invoke
+        if self.checks != other.checks:
+            other.checks = self.checks.copy()
+        if self._buckets.valid and not other._buckets.valid:
+            other._buckets = self._buckets.copy()
+        if self._max_concurrency != other._max_concurrency:
+            # _max_concurrency won't be None at this point
+            other._max_concurrency = self._max_concurrency.copy()  # type: ignore
+
+        try:
+            other.on_error = self.on_error
+        except AttributeError:
+            pass
+        return other
+
+    def _update_copy(self, kwargs: Dict[str, Any]):
+        if kwargs:
+            kw = kwargs.copy()
+            kw.update(self.__original_kwargs__)
+            copy = self.__class__(self.callback, **kw)
+            return self._ensure_assignment_on_copy(copy)
+        else:
+            return self.copy()
 
 class Option:
     def __init__(
@@ -520,7 +557,6 @@ class SubCommandGroup(ApplicationCommand, Option):
         ctx.interaction.data = option
         await command.invoke(ctx)
 
-
 class ContextMenuCommand(ApplicationCommand):
     def __new__(cls, *args, **kwargs) -> ContextMenuCommand:
         self = super().__new__(cls)
@@ -630,6 +666,43 @@ class UserCommand(ContextMenuCommand):
                 state=ctx.interaction._state,
             )
         await self.callback(ctx, target)
+    
+    def copy(self):
+        """Creates a copy of this command.
+
+        Returns
+        --------
+        :class:`UserCommand`
+            A new instance of this command.
+        """
+        ret = self.__class__(self.callback, **self.__original_kwargs__)
+        return self._ensure_assignment_on_copy(ret)
+
+    def _ensure_assignment_on_copy(self, other):
+        other._before_invoke = self._before_invoke
+        other._after_invoke = self._after_invoke
+        if self.checks != other.checks:
+            other.checks = self.checks.copy()
+        if self._buckets.valid and not other._buckets.valid:
+            other._buckets = self._buckets.copy()
+        if self._max_concurrency != other._max_concurrency:
+            # _max_concurrency won't be None at this point
+            other._max_concurrency = self._max_concurrency.copy()  # type: ignore
+
+        try:
+            other.on_error = self.on_error
+        except AttributeError:
+            pass
+        return other
+
+    def _update_copy(self, kwargs: Dict[str, Any]):
+        if kwargs:
+            kw = kwargs.copy()
+            kw.update(self.__original_kwargs__)
+            copy = self.__class__(self.callback, **kw)
+            return self._ensure_assignment_on_copy(copy)
+        else:
+            return self.copy()
 
 
 class MessageCommand(ContextMenuCommand):
@@ -655,7 +728,107 @@ class MessageCommand(ContextMenuCommand):
 
         target = Message(state=ctx.interaction._state, channel=channel, data=message)
         await self.callback(ctx, target)
+    
+    def copy(self):
+        """Creates a copy of this command.
 
+<<<<<<< HEAD
+=======
+        Returns
+        --------
+        :class:`MessageCommand`
+            A new instance of this command.
+        """
+        ret = self.__class__(self.callback, **self.__original_kwargs__)
+        return self._ensure_assignment_on_copy(ret)
+
+    def _ensure_assignment_on_copy(self, other):
+        other._before_invoke = self._before_invoke
+        other._after_invoke = self._after_invoke
+        if self.checks != other.checks:
+            other.checks = self.checks.copy()
+        if self._buckets.valid and not other._buckets.valid:
+            other._buckets = self._buckets.copy()
+        if self._max_concurrency != other._max_concurrency:
+            # _max_concurrency won't be None at this point
+            other._max_concurrency = self._max_concurrency.copy()  # type: ignore
+
+        try:
+            other.on_error = self.on_error
+        except AttributeError:
+            pass
+        return other
+
+    def _update_copy(self, kwargs: Dict[str, Any]):
+        if kwargs:
+            kw = kwargs.copy()
+            kw.update(self.__original_kwargs__)
+            copy = self.__class__(self.callback, **kw)
+            return self._ensure_assignment_on_copy(copy)
+        else:
+            return self.copy()
+
+def slash_command(self, **kwargs) -> SlashCommand:
+    """Decorator for slash commands that invokes :func:`application_command`.
+    .. versionadded:: 2.0
+    Returns
+    --------
+    Callable[..., :class:`SlashCommand`]
+        A decorator that converts the provided method into a :class:`.SlashCommand`.
+    """
+    return self.application_command(cls=SlashCommand, **kwargs)
+
+def user_command(self, **kwargs) -> UserCommand:
+    """Decorator for user commands that invokes :func:`application_command`.
+    .. versionadded:: 2.0
+    Returns
+    --------
+    Callable[..., :class:`UserCommand`]
+        A decorator that converts the provided method into a :class:`.UserCommand`.
+    """
+    return application_command(cls=UserCommand, **kwargs)
+
+def message_command(self, **kwargs) -> MessageCommand:
+    """Decorator for message commands that invokes :func:`application_command`.
+    .. versionadded:: 2.0
+    Returns
+    --------
+    Callable[..., :class:`MessageCommand`]
+        A decorator that converts the provided method into a :class:`.MessageCommand`.
+    """
+    return application_command(cls=MessageCommand, **kwargs)
+
+def application_command(**kwargs):
+    """Decorator for application commands.
+    .. note::
+        This decorator is overriden by :func:`commands.command`.
+    .. versionadded:: 2.0
+    Returns
+    --------
+    Callable[..., :class:`ApplicationCommand`]
+        A decorator that converts the provided method into an :class:`.ApplicationCommand`.
+    """
+
+    def decorator(func) -> ApplicationCommand:
+        kwargs.setdefault("parent", self)
+        result = command(**kwargs)(func)
+        return result
+
+    return decorator
+
+def command(self, **kwargs):
+    """There is an alias for :meth:`application_command`.
+    .. note::
+        This decorator is overriden by :func:`commands.command`.
+    .. versionadded:: 2.0
+    Returns
+    --------
+    Callable[..., :class:`ApplicationCommand`]
+        A decorator that converts the provided method into an :class:`.ApplicationCommand`.
+    """
+    return application_command(**kwargs)
+        
+>>>>>>> 75491343cbb16a5296cde1c3a7d215a0a532ff41
 # Validation
 def validate_chat_input_name(name: Any):
     if not isinstance(name, str):
