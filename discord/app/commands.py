@@ -90,7 +90,7 @@ def hooked_wrapped_callback(command, ctx, coro):
 class _BaseCommand:
     __slots__ = ()
 
-class ApplicationCommand:
+class ApplicationCommand(_BaseCommand):
     cog = None
     
     def __repr__(self):
@@ -418,7 +418,10 @@ class SlashCommand(ApplicationCommand):
             await self.callback(self.cog, ctx, **kwargs)
         else:
             await self.callback(ctx, **kwargs)
-    
+
+    def qualified_name(self):
+        return self.name
+
     def copy(self):
         """Creates a copy of this command.
 
