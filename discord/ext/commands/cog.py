@@ -50,8 +50,6 @@ class Cog(Cog):
         # To do this, we need to interfere with the Cog creation process.
         self = super().__new__(cls)
 
-        self.__filter__ = _BaseCommand
-
         return self
 
     def walk_commands(self) -> Generator[Command, None, None]:
